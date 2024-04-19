@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Add initial adr
 - Update readme
 - Adr toc and readme link
+- Add changelog
 
 ### ⚙️ Miscellaneous Tasks
 
