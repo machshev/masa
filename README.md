@@ -1,6 +1,7 @@
 # masa
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/machshev/masa.svg)](https://pkg.go.dev/github.com/machshev/masa)
+[![CI](https://github.com/machshev/masa/actions/workflows/ci.yml/badge.svg)](https://github.com/machshev/masa/actions/workflows/ci.yml)
 
 Helping with the journey of life by providing an integrated aid for capturing
 ideas, refining them and supporting acting on them.
@@ -18,3 +19,7 @@ with them as needed.
 Well at the moment this is an early stage project, so don't expect any stability
 or utility. I'll update this readme with more information as the project
 progresses.
+
+## ADRs
+
+The plan is to document the design as we "Go" with [ADRs](doc/adr/toc.md).
