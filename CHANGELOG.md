@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.2.0] - 2024-04-20
+
+### 🚀 Features
+
+- Add protobuf models for the ThoughPad feature
+- Thought pad save and loading without transaction log
 
 ### 📚 Documentation
 
