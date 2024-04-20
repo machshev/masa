@@ -1,0 +1,13 @@
+syntax = "proto3";
+package machshev.masa.pb.thoughts;
+
+import "google/protobuf/timestamp.proto";
+
+message Thought {
+    google.protobuf.Timestamp created = 1;
+    string text = 2;
+}
+
+message ThoughtPad {
+    repeated Thought thoughts = 1;
+}

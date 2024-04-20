@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/machshev/masa/config"
+	// "github.com/machshev/masa/pb/thoughts"
 )
 
 // High level thought that has been Captured to then triage later
