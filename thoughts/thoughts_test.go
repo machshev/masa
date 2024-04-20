@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/machshev/masa/config"
+	pb "github.com/machshev/masa/pb/thoughts"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,6 +16,21 @@ func newTestThoughtPad() ThoughtPad {
 	db := make([]Thought, 0, 20)
 
 	return ThoughtPad{db}
+}
+
+// setupFakeMasaFS creates a temp dir and uses it as the MASA_DATADIR
+func setupFakeMasaFS(t *testing.T) (string, func()) {
+
+	base_dir := t.TempDir()
+	os.Setenv(config.MASA_DATADIR, base_dir)
+
+	tp, _ := GetThoughtPad()
+	tp.ClearAll()
+
+	return base_dir, func() {
+		tp.ClearAll()
+		os.Setenv(config.MASA_DATADIR, "")
+	}
 }
 
 // TestThoughtPadAdd calls ThoughtPad.Add with a new Thought and checks it is
@@ -37,72 +55,89 @@ func TestThoughtPadAdd(t *testing.T) {
 				}
 			}
 
-			thought_list, err := pad.GetAll()
-			if err != nil {
-				t.Errorf("Error getting all thoughts %v", err)
-			}
+			thought_list := pad.GetAll()
 
 			assert.Lenf(t, thought_list, len(tt.thoughts), "Missing thoughts")
 
 			for i := range tt.thoughts {
-				assert.Equal(t, tt.thoughts[i], thought_list[i].Desc)
+				assert.Equal(t, tt.thoughts[i], thought_list[i].Text)
 			}
 		})
 	}
 }
 
-// TestGetExistingPadFilePaths calls getExistingPadFilePaths from MASA_BASEDIR
-func TestGetExistingPadFilePaths(t *testing.T) {
-	var tests = []struct {
-		name   string
-		create []string
-		want   []string
-	}{
-		{
-			"One file",
-			[]string{"pad.0"},
-			[]string{"pad.0"},
-		},
-		{
-			"Multiple files",
-			[]string{"pad.0", "pad.1", "pad.3"},
-			[]string{"pad.0", "pad.1", "pad.3"},
-		},
-		{
-			"Non pad files",
-			[]string{"pad.9", "pad1", "abc"},
-			[]string{"pad.9"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			base_dir := t.TempDir()
-			os.Setenv(config.MASA_DATADIR, base_dir)
-			defer os.Setenv(config.MASA_DATADIR, "")
-
-			for _, fn := range tt.create {
-				os.Create(filepath.Join(base_dir, fn))
-			}
-			found := getExistingPadFilePaths()
-			assert.ElementsMatch(t, found, tt.want, "Pad files missing")
-		})
-	}
-}
-
-// TestOpenThoughtPad calls OpenThoughtPad and check that the ThoughtPad pointer
+// TestGetThoughtPad calls GetThoughtPad and check that the ThoughtPad pointer
 // returned references the same underlying data
-func TestOpenThoughtPad(t *testing.T) {
-	tp1, _ := OpenThoughtPad()
-	tp2, _ := OpenThoughtPad()
+func TestGetThoughtPad(t *testing.T) {
+	_, teardown := setupFakeMasaFS(t)
+	defer teardown()
+
+	tp1, _ := GetThoughtPad()
+	tp2, _ := GetThoughtPad()
 
 	tp1.Add("Thought 1")
 	tp2.Add("Thought 2")
 
-	tp3, _ := OpenThoughtPad()
+	tp3, _ := GetThoughtPad()
 
-	ts1, _ := tp3.GetAll()
-	ts2, _ := tp1.GetAll()
+	assert.Equal(t, tp3.GetAll(), tp1.GetAll(), "Thought lists are equal")
+	assert.Equal(t, 2, len(tp1.GetAll()), "Two elements")
 
-	assert.Equal(t, ts1, ts2, "Thought lists are equal")
+	tp2.ClearAll()
+
+	assert.Equal(t, 0, len(tp1.GetAll()), "Empty")
 }
+
+// TestThoughtPadSave checks ThoughtPad_Save to disk the first time no existing
+// pad.binpb file
+func TestThoughtPadSave(t *testing.T) {
+	base_dir, teardown := setupFakeMasaFS(t)
+	defer teardown()
+
+	tp, _ := GetThoughtPad()
+
+	tp.Add("Thought 1")
+	tp.Add("Thought 2")
+
+	tp.Save()
+
+	// Check the contents of the pad.binpb file
+	pad_file := filepath.Join(base_dir, "pad.binpb")
+
+	assert.FileExists(t, pad_file, "pad file exists")
+
+	c, _ := os.ReadFile(pad_file)
+	pb_tp := &pb.ThoughtPad{}
+
+	assert.NoError(t, proto.Unmarshal(c, pb_tp), "Error unmarshalling")
+
+	assert.Equal(t, 2, len(pb_tp.Thoughts), "Only 2 thoughts")
+
+	for i, thought := range pb_tp.Thoughts {
+		assert.Equal(t, tp.GetAll()[i].Text, thought.Text)
+		assert.Equal(t, tp.GetAll()[i].Created, thought.Created.AsTime())
+
+	}
+
+	thoughts := tp.GetAll()
+
+	// Clear the pad and reload from saved state
+	tp.ClearAll()
+	assert.Equal(t, 0, len(tp.GetAll()), "Empty")
+
+	tp.Load()
+
+	assert.Equal(t, thoughts, tp.GetAll(), "Same state reloaded")
+}
+
+// 1. Load the ThoughtPad data from disk:
+//     - If no files it will create a new empty in memory ThoughtPad.
+// TODO:     - If a backup ThoughtPad exists then:
+// TODO:         - Read it into memory
+// TODO:         - If a transaction file exists then apply the transactions
+// TODO:     - If only a main ThoughtPad file exists then load it into memory
+// TODO: 2. Save the new in memory ThoughtPad to the main ThoughtPad file
+// TODO: 3. Remove the backup ThoughtPad file and the old transaction file
+// TODO: 4. Open a new transaction file for the current session
+
+// TODO: Save ThoughtPad when there is an existing pad.binpb file

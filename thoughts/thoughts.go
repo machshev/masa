@@ -4,16 +4,19 @@ package thoughts
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/machshev/masa/config"
-	// "github.com/machshev/masa/pb/thoughts"
+	pb "github.com/machshev/masa/pb/thoughts"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // High level thought that has been Captured to then triage later
 type Thought struct {
-	Desc    string
+	Text    string
 	Created time.Time
 }
 
@@ -25,13 +28,74 @@ type ThoughtPad struct {
 var pad *ThoughtPad = nil
 
 // Add a new thought to the thought pad
-func (t *ThoughtPad) Add(desc string) error {
-	t.db = append(t.db, Thought{desc, time.Now()})
+func (t *ThoughtPad) Add(text string) error {
+	t.db = append(t.db, Thought{Text: text, Created: time.Now().UTC()})
 	return nil
 }
 
-func (t *ThoughtPad) GetAll() ([]Thought, error) {
-	return t.db, nil
+// GetAll returns a slice of the captured thoughts
+func (t *ThoughtPad) GetAll() []Thought {
+	return t.db
+}
+
+// ClearAll removes all thoughts from the pad
+func (t *ThoughtPad) ClearAll() {
+	t.db = t.db[:0]
+}
+
+// Save saves the contents of the thought pad to fs
+func (t *ThoughtPad) Save() error {
+	pb_tp := &pb.ThoughtPad{}
+
+	for _, thought := range t.db {
+		pb_tp.Thoughts = append(
+			pb_tp.Thoughts,
+			&pb.Thought{
+				Created: timestamppb.New(thought.Created),
+				Text:    thought.Text,
+			},
+		)
+	}
+
+	bytes, err := proto.Marshal(pb_tp)
+	if err != nil {
+		return err
+	}
+
+	masa_base_dir := config.GetMasaDataDir()
+	os.MkdirAll(masa_base_dir, 0750)
+
+	err = os.WriteFile(filepath.Join(masa_base_dir, "pad.binpb"), bytes, 0751)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Load the contents of thought pad from fs
+func (t *ThoughtPad) Load() error {
+	masa_base_dir := config.GetMasaDataDir()
+	bytes, err := os.ReadFile(filepath.Join(masa_base_dir, "pad.binpb"))
+	if err != nil {
+		return err
+	}
+
+	pb_tp := &pb.ThoughtPad{}
+	if err = proto.Unmarshal(bytes, pb_tp); err != nil {
+		return err
+	}
+
+	t.ClearAll()
+
+	for _, thought := range pb_tp.Thoughts {
+		t.db = append(t.db, Thought{
+			Created: thought.Created.AsTime(),
+			Text:    thought.Text,
+		})
+	}
+
+	return nil
 }
 
 func getExistingPadFilePaths() []string {
@@ -52,13 +116,11 @@ func getExistingPadFilePaths() []string {
 	return pad_filenames
 }
 
-// Open the thought pad
-func OpenThoughtPad() (*ThoughtPad, error) {
+// GetThoughtPad provides a pointer to the active thought pad
+func GetThoughtPad() (*ThoughtPad, error) {
 	if pad == nil {
 		db := make([]Thought, 0, 20)
 		pad = &ThoughtPad{db}
-
-		// pad_filenames := getPadFilePaths()
 	}
 
 	return pad, nil
