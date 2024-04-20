@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 📚 Documentation
+
+- Add adr 0002 First class concurrency from the start
+- Add adr 0003 create a ThoughtPad
+
 ## [0.1.0] - 2024-04-19
 
 ### 🚀 Features
