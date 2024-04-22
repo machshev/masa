@@ -7,6 +7,7 @@ confirm_or_die() {
 		return
 		;;
 	*)
+		echo "Aborting"
 		exit 2
 		;;
 	esac
@@ -19,6 +20,8 @@ cd $(git rev-parse --show-toplevel)
 NEXT_VERSION="$(git cliff --bumped-version)"
 
 echo "Preparing for a new release [$NEXT_VERSION]"
+
+# TODO: check there arn't any uncommitted files
 
 echo " * Generating candidate CHANGELOG.md"
 
@@ -33,4 +36,17 @@ else
 	git cliff -u -t $NEXT_VERSION -p CHANGELOG.staged.md
 fi
 
-echo "Tag message"
+echo " * Manually update the CHANGELOG.md file with release comments"
+$EDITOR CHANGELOG.staged.md
+
+mv CHANGELOG.staged.md CHANGELOG.md
+
+echo " * Commit changes"
+
+git add -A
+git commit -m "chore(release): release $NEXT_VERSION"
+
+git tag -a $NEXT_VERSION -m "Release $NEXT_VERSION"
+
+echo
+echo "Ready to release... double check the commit and push!"

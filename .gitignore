@@ -21,7 +21,7 @@
 masa
 
 # Temporary files
-*.staged
+CHANGELOG.staged.md
 
 # Go workspace file
 go.work
