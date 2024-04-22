@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [0.2.0] - 2024-04-20
 
+Some extra functionality, however it's limited to the library and not the CLI.
+This release is part of the process of getting better release process and
+artefacts. Establishing better processes in terms of keeping a changelog and
+ADRs to capture design decissions.
+
 ### 🚀 Features
 
 - Add protobuf models for the ThoughPad feature
@@ -15,7 +20,14 @@ All notable changes to this project will be documented in this file.
 - Add adr 0003 create a ThoughtPad
 - Update adr toc
 
+### ⚙️ Miscellaneous Tasks
+
+- _(changelog)_ Update the changelog for the v0.2.0 release
+
 ## [0.1.0] - 2024-04-19
+
+There isn't much to see here with this release. It's mostly just early stage WIP
+and trying to setup a workflow to make better release artefacts.
 
 ### 🚀 Features
 

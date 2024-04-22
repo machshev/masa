@@ -20,5 +20,8 @@
 # binary file
 masa
 
+# Temporary files
+*.staged
+
 # Go workspace file
 go.work

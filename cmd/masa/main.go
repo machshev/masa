@@ -10,7 +10,7 @@ import (
 
 var rootCmd = &cli.Command{
 	Name:                  "masa",
-	Version:               "v0.0.0",
+	Version:               "v0.2.0",
 	Usage:                 "Managing your journey",
 	EnableShellCompletion: true,
 	Suggest:               true,
