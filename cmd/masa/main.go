@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -16,7 +16,7 @@ var rootCmd = &cli.Command{
 	Suggest:               true,
 }
 
-func Execute() {
+func main() {
 	if err := rootCmd.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
