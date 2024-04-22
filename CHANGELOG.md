@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2024-04-22
+
+Focus on a better quality release process. Where the changelog, tags and cli
+version string all match. As well as better documentation for the go package
+docs.
+
+### 🚜 Refactor
+
+- Move cli to it's own package
+
+### ⚙️ Miscellaneous Tasks
+
+- *(build)* Improved release process scripts with consistent version sync
+- *(release)* Release script commits and tags
+
 ## [0.2.0] - 2024-04-20
 
 Some extra functionality, however it's limited to the library and not the CLI.
