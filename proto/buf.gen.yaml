@@ -7,3 +7,6 @@ plugins:
   - plugin: buf.build/protocolbuffers/go
     out: ../pb
     opt: paths=source_relative
+  - plugin: connect-go
+    out: ../pb
+    opt: paths=source_relative

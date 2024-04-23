@@ -11,3 +11,25 @@ message Thought {
 message ThoughtPad {
     repeated Thought thoughts = 1;
 }
+
+message AddRequest {
+    Thought thought = 1;
+}
+
+message AddResponse {
+    int32 id = 1;
+    string error = 2;
+}
+
+message ListRequest {
+}
+
+message ListResponse {
+    repeated Thought thoughts = 1;
+    string error = 2;
+}
+
+service ThoughtService {
+    rpc Add(AddRequest) returns (AddResponse) {}
+    rpc List(ListRequest) returns (ListResponse) {}
+}

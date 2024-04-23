@@ -2,37 +2,53 @@
 
 # All operations performed relative to the git top level dir
 # This means consistent operations regardless of where the script is run from
-cd $(git rev-parse --show-toplevel)
+cd "$(git rev-parse --show-toplevel)" || exit
 
 # This script is used to tidy everything and prepare for a new release
-echo
-echo "Update ADR doc table of contents"
+echo " * Update ADR doc table of contents"
 adrs generate toc >doc/adr/toc.md
 
-echo
-echo "regenerate protobuf code"
+echo " * regenerate protobuf code"
 (
-	cd proto
+	cd proto || exit 10
 	buf generate
 )
 
-echo
-echo "Go tidy"
+echo " * Go tidy"
 go mod tidy
 go fmt ./...
 go fix ./...
 
-echo
-echo "Go dependency update"
-go get -u
+echo " * Go dependency update"
+go get -u ./cmd/masa
+go get -u ./cmd/masa-server
 
-echo
-echo "Go test everything"
-go test ./...
+echo " * Go Vet"
+if ! go vet ./...; then
+	echo "***** Aborting (Vet failed) *****"
+	exit 1
+fi
 
-echo
-echo "Git cliff update the changelog"
+echo " * Build Masa Server"
+if ! go build -o bin/masa-server ./cmd/masa-server; then
+	echo "***** Aborting (build failed) *****"
+	exit 2
+fi
+
+echo " * Build Masa CLI"
+if ! go build -o bin/masa ./cmd/masa; then
+	echo "***** Aborting (build failed) *****"
+	exit 3
+fi
+
+echo " * Go test everything"
+if ! go test -shuffle on ./...; then
+	echo "***** Aborting *****"
+	exit 4
+fi
+
+echo " * Git cliff update the changelog"
 git-cliff -l
 
 echo
-echo "The next release would be ($(git cliff --bumped-version))"
+echo "[The next release would be $(git cliff --bumped-version)]"
