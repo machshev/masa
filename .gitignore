@@ -18,7 +18,7 @@
 # vendor/
 
 # binary file
-masa
+./masa
 
 # Temporary files
 CHANGELOG.staged.md

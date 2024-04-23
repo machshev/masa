@@ -39,9 +39,7 @@ go test ./...
 
 echo
 echo "Git cliff update the changelog"
-git-cliff -o
+git-cliff -l
 
 echo
 echo "The next release would be ($(git cliff --bumped-version))"
-
-popd
