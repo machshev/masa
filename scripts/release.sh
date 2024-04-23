@@ -17,9 +17,12 @@ confirm_or_die() {
 # This means consistent operations regardless of where the script is run from
 cd $(git rev-parse --show-toplevel)
 
+CLI_SRC='./cmd/masa/main.go'
+
+LATEST_TAG=$(git tag -l v* | grep 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | sort -r | head -n 1)
 NEXT_VERSION="$(git cliff --bumped-version)"
 
-echo "Preparing for a new release [$NEXT_VERSION]"
+echo "Preparing for a new release [$LATEST_TAG -> $NEXT_VERSION]"
 
 # TODO: check there arn't any uncommitted files
 
@@ -40,6 +43,14 @@ echo " * Manually update the CHANGELOG.md file with release comments"
 $EDITOR CHANGELOG.staged.md
 
 mv CHANGELOG.staged.md CHANGELOG.md
+
+# Update version to match git tag
+
+echo " * Updating version string in $CLI_SRC to match latest git tag ($NEXT_VERSION)"
+sed -i "s/Version:.*/Version: \"$NEXT_VERSION\",/g" "$CLI_SRC"
+
+# Make sure the repo is up to date before making a full release
+./scripts/update.sh
 
 echo " * Commit changes"
 
