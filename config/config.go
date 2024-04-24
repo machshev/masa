@@ -9,7 +9,7 @@ import (
 
 const MASA_DATADIR = "MASA_DATADIR"
 
-// GetMasaDataDir finds the masa data directory
+// GetMasaDataDir finds the Masa data directory
 func GetMasaDataDir() string {
 	masa_base := os.Getenv(MASA_DATADIR)
 	if masa_base == "" {
@@ -17,4 +17,9 @@ func GetMasaDataDir() string {
 	}
 
 	return masa_base
+}
+
+// GetMasaServerURL provides the Masa server URL
+func GetMasaServerURL() string {
+	return "localhost:10565"
 }

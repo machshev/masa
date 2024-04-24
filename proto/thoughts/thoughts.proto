@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 message Thought {
     google.protobuf.Timestamp created = 1;
     string text = 2;
+    bytes uuid = 3;
 }
 
 message ThoughtPad {
@@ -13,12 +14,11 @@ message ThoughtPad {
 }
 
 message AddRequest {
-    Thought thought = 1;
+    string thought = 1;
 }
 
 message AddResponse {
-    int32 id = 1;
-    string error = 2;
+    bytes uuid = 1;
 }
 
 message ListRequest {
@@ -26,7 +26,6 @@ message ListRequest {
 
 message ListResponse {
     repeated Thought thoughts = 1;
-    string error = 2;
 }
 
 service ThoughtService {

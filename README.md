@@ -1,5 +1,7 @@
 # masa
 
+![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)
+[![CodeQuality](https://goreportcard.com/badge/github.com/machshev/masa)](https://goreportcard.com/report/github.com/machshev/masa)
 [![Go Reference](https://pkg.go.dev/badge/github.com/machshev/masa.svg)](https://pkg.go.dev/github.com/machshev/masa)
 [![CI](https://github.com/machshev/masa/actions/workflows/ci.yml/badge.svg)](https://github.com/machshev/masa/actions/workflows/ci.yml)
 

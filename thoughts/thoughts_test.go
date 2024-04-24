@@ -50,7 +50,7 @@ func TestThoughtPadAdd(t *testing.T) {
 			pad := newTestThoughtPad()
 
 			for _, th := range tt.thoughts {
-				if err := pad.Add(th); err != nil {
+				if _, err := pad.Add(th); err != nil {
 					t.Errorf("Error adding new thought: %s", th)
 				}
 			}
