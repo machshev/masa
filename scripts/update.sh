@@ -48,7 +48,7 @@ if ! go test -shuffle on ./...; then
 fi
 
 echo " * Git cliff update the changelog"
-git-cliff -l
+git-cliff -u
 
 echo
 echo "[The next release would be $(git cliff --bumped-version)]"
