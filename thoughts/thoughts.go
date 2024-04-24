@@ -2,10 +2,8 @@
 package thoughts
 
 import (
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/machshev/masa/config"
@@ -18,6 +16,20 @@ import (
 type Thought struct {
 	Text    string
 	Created time.Time
+}
+
+func (t Thought) AsPB() *pb.Thought {
+	return &pb.Thought{
+		Created: timestamppb.New(t.Created),
+		Text:    t.Text,
+	}
+}
+
+func ThoughtFromPB(pbt *pb.Thought) Thought {
+	return Thought{
+		Created: pbt.Created.AsTime(),
+		Text:    pbt.Text,
+	}
 }
 
 // Capture thoughts for later processing into tasks, reminders, habits &c.
@@ -43,21 +55,34 @@ func (t *ThoughtPad) ClearAll() {
 	t.db = t.db[:0]
 }
 
-// Save saves the contents of the thought pad to fs
-func (t *ThoughtPad) Save() error {
-	pb_tp := &pb.ThoughtPad{}
+// AsPB converts a ThoughtPad to protobuf ThoughtPad
+func (t ThoughtPad) AsPB() *pb.ThoughtPad {
+	thoughts := make([]*pb.Thought, len(t.db))
 
-	for _, thought := range t.db {
-		pb_tp.Thoughts = append(
-			pb_tp.Thoughts,
-			&pb.Thought{
-				Created: timestamppb.New(thought.Created),
-				Text:    thought.Text,
-			},
-		)
+	for i, thought := range t.db {
+		thoughts[i] = thought.AsPB()
 	}
 
-	bytes, err := proto.Marshal(pb_tp)
+	return &pb.ThoughtPad{
+		Thoughts: thoughts,
+	}
+}
+
+func ThoughtPadFromPB(pb_pad *pb.ThoughtPad) ThoughtPad {
+	thoughts := make([]Thought, len(pb_pad.Thoughts))
+
+	for i, thought := range pb_pad.Thoughts {
+		thoughts[i] = ThoughtFromPB(thought)
+	}
+
+	return ThoughtPad{
+		db: thoughts,
+	}
+}
+
+// Save saves the contents of the thought pad to fs
+func (t *ThoughtPad) Save() error {
+	bytes, err := proto.Marshal(t.AsPB())
 	if err != nil {
 		return err
 	}
@@ -86,37 +111,13 @@ func (t *ThoughtPad) Load() error {
 		return err
 	}
 
-	t.ClearAll()
-
-	for _, thought := range pb_tp.Thoughts {
-		t.db = append(t.db, Thought{
-			Created: thought.Created.AsTime(),
-			Text:    thought.Text,
-		})
-	}
+	pad := ThoughtPadFromPB(pb_tp)
+	t.db = pad.db
 
 	return nil
 }
 
-func getExistingPadFilePaths() []string {
-	masa_base_dir := config.GetMasaDataDir()
-	os.MkdirAll(masa_base_dir, 0750)
-
-	files, err := os.ReadDir(masa_base_dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pad_filenames := make([]string, 0, 10)
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), "pad.") {
-			pad_filenames = append(pad_filenames, file.Name())
-		}
-	}
-	return pad_filenames
-}
-
-// GetThoughtPad provides a pointer to the active thought pad
+// GetThoughtPad provides the active thought pad
 func GetThoughtPad() (*ThoughtPad, error) {
 	if pad == nil {
 		db := make([]Thought, 0, 20)
