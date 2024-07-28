@@ -25,3 +25,6 @@ CHANGELOG.staged.md
 
 # Go workspace file
 go.work
+
+# nix
+result
